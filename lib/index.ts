@@ -61,7 +61,7 @@ export function render(skinData: string, yosysNetlist: Yosys.Netlist, done?: ICa
         // otherwise use ELK to generate the layout
         promise = elk.layout(kgraph, { layoutOptions: layoutProps.layoutEngine })
             .then((g) => drawModule(g, flatModule))
-            // tslint:disable-next-line:no-console
+            // eslint-disable-next-line no-console
             .catch((e) => { console.error(e); });
     }
 

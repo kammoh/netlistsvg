@@ -75,7 +75,7 @@ export namespace ElkModel {
     }
 
     export interface Label {
-        id: string;
+        id?: string;
         text: string;
         x: number;
         y: number;
@@ -197,7 +197,6 @@ function route(sourcePorts, targetPorts, edges: ElkModel.Edge[], numWires) {
         let edgeLabel: ElkModel.Label[];
         if (numWires > 1) {
             edgeLabel = [{
-                id: '',
                 text: String(numWires),
                 width: 4,
                 height: 6,

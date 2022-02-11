@@ -16,6 +16,9 @@ export default class Cell {
     public static fromPort(yPort: Yosys.ExtPort, name: string): Cell {
         const isInput: boolean = yPort.direction === Yosys.Direction.Input;
         if (isInput) {
+            if (yPort.bits.length === 1 && (name === "clk" || name === "clock")){
+                return new Cell(name, '$_inputClk_', [], [new Port('Y', yPort.bits)], {});
+            }
             return new Cell(name, '$_inputExt_', [], [new Port('Y', yPort.bits)], {});
         }
         return new Cell(name, '$_outputExt_', [new Port('A', yPort.bits)], [], {});
