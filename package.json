@@ -32,8 +32,8 @@
     "bin-install": "yarn build && yarn global add file:/$PWD && yarn global bin",
     "test-examples": "tsc && node --trace-warnings test/test-all.js",
     "lint": "eslint && eslint bin/**/*.js && eslint --global=document demo/**/*.js",
-    "test": "yarn run -s test-examples && yarn run -s lint && jest",
-    "build": "yarn compile && yarn build-module",
+    "test": "yarn build && yarn run test-examples && yarn run lint && jest",
+    "build": "yarn clean && yarn compile && yarn build-module",
     "build-demo": "cp demo/index.html . && cp node_modules/elkjs/lib/elk.bundled.js . && browserify demo/demo.js > bundle.js",
     "build-module": "browserify -t brfs -s netlistsvg jsmodule/index.js > built/netlistsvg.bundle.js"
   },

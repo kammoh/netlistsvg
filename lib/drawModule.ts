@@ -22,6 +22,13 @@ export default function drawModule(g: ElkModel.Graph, module: FlatModule) {
         const numWires = netId.split(',').length - 2;
         const lineStyle = 'stroke-width: ' + (numWires > 1 ? 2 : 1);
         const netName = 'net_' + netId.slice(1, netId.length - 1) + ' width_' + numWires;
+        let styleClass = netName;
+        let ee = (e as unknown as ElkModel.ExtendedEdge);
+        let isClock = false;
+        if (numWires == 1 && ee !== undefined && ee.targets !== undefined && (ee.targets[0].endsWith('.CLK'))) {
+            isClock = true;
+            styleClass = styleClass + ' clkWire';
+        }
         return _.flatMap(e.sections, (s: ElkModel.Section) => {
             let startPoint = s.startPoint;
             s.bendPoints = s.bendPoints || [];
@@ -31,32 +38,33 @@ export default function drawModule(g: ElkModel.Graph, module: FlatModule) {
                     x2: b.x,
                     y1: startPoint.y,
                     y2: b.y,
-                    class: netName,
-                    style: lineStyle,
+                    class: styleClass,
+                    style: lineStyle
                 }];
                 startPoint = b;
                 return l;
             });
+            const line = [['line', {
+                x1: startPoint.x,
+                x2: s.endPoint.x,
+                y1: startPoint.y,
+                y2: s.endPoint.y,
+                style: lineStyle,
+                class: styleClass,
+            }]];
+            bends = bends.concat(line);
             if (e.junctionPoints) {
                 const circles: any[] = e.junctionPoints.map((j: ElkModel.WirePoint) =>
                     ['circle', {
                         cx: j.x,
                         cy: j.y,
                         r: (numWires > 1 ? 3 : 2),
-                        style: 'fill:#000',
-                        class: netName,
+                        style: isClock ? 'none' : 'fill:#000',
+                        class: styleClass,
                     }]);
                 bends = bends.concat(circles);
             }
-            const line = [['line', {
-                x1: startPoint.x,
-                x2: s.endPoint.x,
-                y1: startPoint.y,
-                y2: s.endPoint.y,
-                class: netName,
-                style: lineStyle,
-            }]];
-            return bends.concat(line);
+            return bends;
         });
     });
     let labels: any[];
@@ -72,24 +80,24 @@ export default function drawModule(g: ElkModel.Graph, module: FlatModule) {
                 (e as ElkModel.ExtendedEdge).labels[0] !== undefined &&
                 (e as ElkModel.ExtendedEdge).labels[0].text !== undefined) {
                 const label = [
-                        ['rect',
-                            {
-                                x: e.labels[0].x + 1,
-                                y: e.labels[0].y - 1,
-                                width: (e.labels[0].text.length + 2) * 6 - 2,
-                                height: 9,
-                                class: netName,
-                                style: 'fill: white; stroke: none',
-                            },
-                        ], ['text',
-                            {
-                                x: e.labels[0].x,
-                                y: e.labels[0].y + 7,
-                                class: netName,
-                            },
-                            '/' + e.labels[0].text + '/',
-                        ],
-                    ];
+                    ['rect',
+                        {
+                            x: e.labels[0].x + 1,
+                            y: e.labels[0].y - 1,
+                            width: (e.labels[0].text.length + 2) * 6 - 3,
+                            height: 9,
+                            class: netName,
+                            style: 'fill: lightgray; stroke: none;',
+                        },
+                    ], ['text',
+                        {
+                            x: e.labels[0].x,
+                            y: e.labels[0].y + 7,
+                            class: netName,
+                        },
+                        '/' + e.labels[0].text + '/',
+                    ],
+                ];
                 if (labels !== undefined) {
                     labels = labels.concat(label);
                 } else {
@@ -141,10 +149,10 @@ function which_dir(start: ElkModel.WirePoint, end: ElkModel.WirePoint): WireDire
 }
 
 function findBendNearDummy(
-        net: ElkModel.Edge[],
-        dummyIsSource: boolean,
-        dummyLoc: ElkModel.WirePoint): ElkModel.WirePoint {
-    const candidates = net.map( (edge) => {
+    net: ElkModel.Edge[],
+    dummyIsSource: boolean,
+    dummyLoc: ElkModel.WirePoint): ElkModel.WirePoint {
+    const candidates = net.map((edge) => {
         const bends = edge.sections[0].bendPoints || [null];
         if (dummyIsSource) {
             return _.first(bends);
@@ -211,7 +219,7 @@ export function removeDummyEdges(g: ElkModel.Graph) {
                 }
                 return section.startPoint;
             }
-        }).map( (pt) => {
+        }).map((pt) => {
             if (pt.x > newEnd.x) {
                 return WireDirection.Right;
             }
